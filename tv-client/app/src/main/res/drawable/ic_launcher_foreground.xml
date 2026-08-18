@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    
+    <!-- 屏幕外框 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M24,32 L84,32 C86.2,32 88,33.8 88,36 L88,68 C88,70.2 86.2,72 84,72 L24,72 C21.8,72 20,70.2 20,68 L20,36 C20,33.8 21.8,32 24,32 Z M26,36 L26,68 L82,68 L82,36 L26,36 Z"/>
+    
+    <!-- 播放按钮 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M46,44 L46,60 L62,52 Z"/>
+    
+    <!-- 底座 -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M44,74 L64,74 L64,78 L44,78 Z"/>
+    
+</vector>

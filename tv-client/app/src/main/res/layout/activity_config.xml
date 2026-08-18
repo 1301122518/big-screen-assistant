@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_gradient"
+    android:padding="48dp"
+    android:gravity="center">
+
+    <!-- 标题 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/app_name"
+        android:textSize="48sp"
+        android:textColor="@color/white"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="TV 版"
+        android:textSize="24sp"
+        android:textColor="@color/white_70"
+        android:layout_marginBottom="48dp" />
+
+    <!-- 配置卡片 -->
+    <LinearLayout
+        android:layout_width="600dp"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:background="@drawable/bg_card"
+        android:padding="32dp">
+
+        <!-- 服务器地址输入 -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="服务器地址"
+            android:textSize="18sp"
+            android:textColor="@color/white"
+            android:layout_marginBottom="8dp" />
+
+        <EditText
+            android:id="@+id/etServerUrl"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="例如: 192.168.1.100:8080"
+            android:textSize="20sp"
+            android:textColor="@color/white"
+            android:textColorHint="@color/white_50"
+            android:background="@drawable/bg_input"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:inputType="textUri"
+            android:singleLine="true"
+            android:nextFocusDown="@id/btnTest"
+            android:imeOptions="actionDone" />
+
+        <!-- 状态提示 -->
+        <TextView
+            android:id="@+id/tvStatus"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="请输入服务器地址"
+            android:textSize="14sp"
+            android:textColor="@color/white_70"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="24dp" />
+
+        <!-- 进度条 -->
+        <ProgressBar
+            android:id="@+id/progressBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_marginBottom="16dp" />
+
+        <!-- 按钮组 -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center">
+
+            <Button
+                android:id="@+id/btnTest"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="1"
+                android:text="测试连接"
+                android:textSize="18sp"
+                android:background="@drawable/btn_secondary"
+                android:layout_marginEnd="16dp"
+                android:nextFocusRight="@id/btnConnect"
+                android:nextFocusDown="@id/btnSettings" />
+
+            <Button
+                android:id="@+id/btnConnect"
+                android:layout_width="0dp"
+                android:layout_height="56dp"
+                android:layout_weight="2"
+                android:text="连接并播放"
+                android:textSize="20sp"
+                android:textStyle="bold"
+                android:background="@drawable/btn_primary"
+                android:nextFocusLeft="@id/btnTest"
+                android:nextFocusDown="@id/btnSettings" />
+
+        </LinearLayout>
+
+        <!-- 设置按钮 -->
+        <Button
+            android:id="@+id/btnSettings"
+            android:layout_width="wrap_content"
+            android:layout_height="48dp"
+            android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:text="设置"
+            android:textSize="16sp"
+            android:background="@android:color/transparent"
+            android:textColor="@color/white_70"
+            android:nextFocusUp="@id/btnTest" />
+
+    </LinearLayout>
+
+    <!-- 底部提示 -->
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="使用遥控器方向键选择，确认键操作"
+        android:textSize="14sp"
+        android:textColor="@color/white_50"
+        android:layout_marginTop="32dp" />
+
+</LinearLayout>

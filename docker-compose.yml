@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  big-screen-assistant:
+    build: .
+    container_name: big-screen-assistant
+    restart: unless-stopped
+    ports:
+      - "8787:8000"
+    volumes:
+      - ./data:/app/data
+      - ./uploads:/app/uploads
+    environment:
+      - DATABASE_URL=sqlite+aiosqlite:///./data/app.db
+      - HOST=0.0.0.0
+      - PORT=8000
