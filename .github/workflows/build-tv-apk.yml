@@ -30,31 +30,34 @@ jobs:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*', '**/gradle-wrapper.properties') }}
+        key: ${{ runner.os }}-gradle-${{ hashFiles('tv-client/**/*.gradle*', 'tv-client/**/gradle-wrapper.properties') }}
         restore-keys: |
           ${{ runner.os }}-gradle-
 
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
+      working-directory: tv-client
 
     - name: Build Debug APK
       run: ./gradlew assembleDebug --no-daemon
+      working-directory: tv-client
 
     - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: big-screen-tv-debug
-        path: app/build/outputs/apk/debug/app-debug.apk
+        path: tv-client/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
 
     - name: Build Release APK
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       run: ./gradlew assembleRelease --no-daemon
+      working-directory: tv-client
 
     - name: Upload Release APK
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       uses: actions/upload-artifact@v4
       with:
         name: big-screen-tv-release
-        path: app/build/outputs/apk/release/app-release-unsigned.apk
+        path: tv-client/app/build/outputs/apk/release/app-release-unsigned.apk
         retention-days: 30
