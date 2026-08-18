@@ -40,7 +40,7 @@ jobs:
 
     - name: Generate CI signing keystore
       run: |
-        keytool -genkeypair -v -keystore tv-client/ci-release.keystore \
+        keytool -genkeypair -v -keystore tv-client/app/ci-release.keystore \
           -alias ci-release -keyalg RSA -keysize 2048 -validity 10000 \
           -storepass ci123456 -keypass ci123456 \
           -dname "CN=BigScreenTV CI, OU=Dev, O=BigScreenTV, L=Beijing, ST=Beijing, C=CN"
