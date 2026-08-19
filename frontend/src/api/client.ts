@@ -423,9 +423,19 @@ export async function fetchSystemInfo(): Promise<SystemInfo> {
 
 // ============ 设备管理 API ============
 
-/** 获取设备列表 */
-export async function fetchDevices(): Promise<Device[]> {
-  const res = await get<Device[]>('/api/devices')
+/** 获取设备列表（分页+筛选） */
+export async function fetchDevices(params?: {
+  page?: number
+  page_size?: number
+  status?: string
+}): Promise<PaginatedDevices> {
+  const searchParams = new URLSearchParams()
+  if (params?.page) searchParams.set('page', String(params.page))
+  if (params?.page_size) searchParams.set('page_size', String(params.page_size))
+  if (params?.status && params.status !== 'all') searchParams.set('status', params.status)
+  const qs = searchParams.toString()
+  const url = qs ? `/api/devices?${qs}` : '/api/devices'
+  const res = await get<PaginatedDevices>(url)
   return res.data
 }
 
@@ -452,4 +462,22 @@ export async function updateDeviceAlias(deviceId: string, alias: string): Promis
     body: JSON.stringify({ alias }),
   })
   if (res.code !== 0) throw new Error(res.message || '更新失败')
+}
+
+/** 批量批准设备 */
+export async function batchApproveDevices(ids: number[]): Promise<BatchResult> {
+  const res = await post<BatchResult>('/api/devices/batch/status', { ids, status: 'approved' })
+  return res.data
+}
+
+/** 批量拒绝设备 */
+export async function batchRejectDevices(ids: number[]): Promise<BatchResult> {
+  const res = await post<BatchResult>('/api/devices/batch/status', { ids, status: 'rejected' })
+  return res.data
+}
+
+/** 批量删除设备 */
+export async function batchDeleteDevices(ids: number[]): Promise<BatchResult> {
+  const res = await post<BatchResult>('/api/devices/batch/delete', { ids })
+  return res.data
 }

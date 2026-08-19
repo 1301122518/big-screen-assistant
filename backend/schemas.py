@@ -130,3 +130,32 @@ class DeviceResponse(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ============ 批量设备管理 ============
+
+class BatchStatusUpdate(BaseModel):
+    """批量状态更新请求"""
+    ids: List[int] = Field(..., min_length=1, description="设备 ID 列表")
+    status: str = Field(..., pattern=r"^(approved|rejected)$", description="目标状态")
+
+
+class BatchDeleteRequest(BaseModel):
+    """批量删除请求"""
+    ids: List[int] = Field(..., min_length=1, description="设备 ID 列表")
+
+
+class BatchResult(BaseModel):
+    """批量操作结果"""
+    success_count: int = 0
+    fail_count: int = 0
+    total: int = 0
+
+
+class PaginatedDeviceResponse(BaseModel):
+    """分页设备列表响应"""
+    items: List[DeviceResponse]
+    total: int
+    page: int
+    page_size: int
+    total_pages: int

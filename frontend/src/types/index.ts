@@ -160,3 +160,22 @@ export interface Device {
   updated_at: string | null
   is_online?: boolean
 }
+
+/** 批量操作结果 */
+export interface BatchResult {
+  success_count: number
+  fail_count: number
+  total: number
+}
+
+/** 分页设备列表 */
+export interface PaginatedDevices {
+  items: Device[]
+  total: number
+  page: number
+  page_size: number
+  total_pages: number
+}
+
+/** 状态筛选选项 */
+export type DeviceFilterStatus = 'all' | 'pending' | 'approved' | 'rejected'

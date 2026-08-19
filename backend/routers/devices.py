@@ -9,7 +9,8 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from backend.database import get_db
 from backend.models import Device
-from backend.schemas import ApiResponse, DeviceRegisterRequest, DeviceStatusUpdate, DeviceAliasUpdate, DeviceResponse, DeviceCommandRequest
+from backend.schemas import ApiResponse, DeviceRegisterRequest, DeviceStatusUpdate, DeviceAliasUpdate, DeviceResponse, DeviceCommandRequest, BatchStatusUpdate, BatchDeleteRequest, BatchResult, PaginatedDeviceResponse
+from sqlalchemy import func
 from backend.auth import get_current_user
 from backend.websocket_hub import ws_hub
 
@@ -76,12 +77,31 @@ async def register_device(
 
 @router.get("", response_model=ApiResponse)
 async def list_devices(
+    page: int = 1,
+    page_size: int = 20,
+    status: str = None,
     _user: str = Depends(get_current_user),
     db: AsyncSession = Depends(get_db),
 ) -> dict:
-    """获取设备列表（需要JWT，管理端用）"""
+    """获取设备列表（分页+筛选，需要JWT，管理端用）"""
+    query = select(Device)
+    count_query = select(func.count(Device.id))
+
+    # 状态筛选
+    if status and status in ("pending", "approved", "rejected"):
+        query = query.where(Device.status == status)
+        count_query = count_query.where(Device.status == status)
+
+    # 总记录数
+    total_result = await db.execute(count_query)
+    total = total_result.scalar() or 0
+    total_pages = max(1, (total + page_size - 1) // page_size)
+    page = max(1, min(page, total_pages))
+
+    # 分页查询
+    offset = (page - 1) * page_size
     result = await db.execute(
-        select(Device).order_by(Device.updated_at.desc())
+        query.order_by(Device.updated_at.desc()).offset(offset).limit(page_size)
     )
     devices = result.scalars().all()
     # 附加在线状态（基于 WebSocket hub 当前连接）
@@ -93,7 +113,13 @@ async def list_devices(
         data.append(info)
     return {
         "code": 0,
-        "data": data,
+        "data": {
+            "items": data,
+            "total": total,
+            "page": page,
+            "page_size": page_size,
+            "total_pages": total_pages,
+        },
         "message": "success",
     }
 
@@ -242,4 +268,59 @@ async def check_device_status(
         "code": 0,
         "data": {"status": device.status, "device": device.to_dict()},
         "message": "success",
+    }
+
+@router.post("/batch/status", response_model=ApiResponse)
+async def batch_update_status(
+    request: BatchStatusUpdate,
+    _user: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """批量批准/拒绝设备（需要JWT）"""
+    success_count = 0
+    fail_count = 0
+    for device_db_id in request.ids:
+        result = await db.execute(
+            select(Device).where(Device.id == device_db_id)
+        )
+        device = result.scalar_one_or_none()
+        if not device:
+            fail_count += 1
+            continue
+        device.status = request.status
+        device.updated_at = datetime.now()
+        success_count += 1
+    await db.flush()
+    status_label = "批准" if request.status == "approved" else "拒绝"
+    return {
+        "code": 0,
+        "data": {"success_count": success_count, "fail_count": fail_count, "total": len(request.ids)},
+        "message": f"批量{status_label}完成：成功 {success_count}，失败 {fail_count}",
+    }
+
+
+@router.post("/batch/delete", response_model=ApiResponse)
+async def batch_delete_devices(
+    request: BatchDeleteRequest,
+    _user: str = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+) -> dict:
+    """批量删除设备（需要JWT）"""
+    success_count = 0
+    fail_count = 0
+    for device_db_id in request.ids:
+        result = await db.execute(
+            select(Device).where(Device.id == device_db_id)
+        )
+        device = result.scalar_one_or_none()
+        if not device:
+            fail_count += 1
+            continue
+        await db.delete(device)
+        success_count += 1
+    await db.flush()
+    return {
+        "code": 0,
+        "data": {"success_count": success_count, "fail_count": fail_count, "total": len(request.ids)},
+        "message": f"批量删除完成：成功 {success_count}，失败 {fail_count}",
     }

@@ -221,7 +221,7 @@ const UploadModal: React.FC<UploadModalProps> = ({
                 <p className="text-sm text-amber-800 font-medium mb-2">📌 使用说明</p>
                 <ol className="text-sm text-amber-700 list-decimal list-inside space-y-1.5">
                   <li>将视频文件通过 FTP/SFTP/共享文件夹拷贝到服务器的 uploads 目录</li>
-                  <li>服务器路径：<code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">/home/<YOUR_USER>/big-screen-assistant/uploads/</code></li>
+                  <li>服务器路径：<code className="bg-amber-100 px-1.5 py-0.5 rounded text-xs">/home/{'<YOUR_USER>'}/big-screen-assistant/uploads/</code></li>
                   <li>点击下方"扫描并导入"按钮，系统会自动识别新文件</li>
                 </ol>
               </div>
