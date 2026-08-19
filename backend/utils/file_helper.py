@@ -3,7 +3,7 @@
 """
 import uuid
 from pathlib import Path
-from backend.config import ALLOWED_EXTS, ALLOWED_IMAGE_EXTS, ALLOWED_VIDEO_EXTS
+from backend.config import ALLOWED_EXTS, ALLOWED_IMAGE_EXTS, ALLOWED_VIDEO_EXTS, ALLOWED_HTML_EXTS
 
 
 def get_file_extension(filename: str) -> str:
@@ -32,6 +32,8 @@ def get_mime_type(filename: str) -> str:
         ".mov": "video/quicktime",
         ".mkv": "video/x-matroska",
         ".webm": "video/webm",
+        ".html": "text/html",
+        ".htm": "text/html",
     }
     return mime_map.get(ext, "application/octet-stream")
 
@@ -43,6 +45,8 @@ def get_material_type(filename: str) -> str:
         return "image"
     elif ext in ALLOWED_VIDEO_EXTS:
         return "video"
+    elif ext in ALLOWED_HTML_EXTS:
+        return "html"
     return "unknown"
 
 

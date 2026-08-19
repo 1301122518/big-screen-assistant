@@ -1,5 +1,5 @@
 /**
- * useMaterials Hook - 素材管理状态与操作
+ * useMaterials Hook - 素材管理状态与操作（v3.0 增加 update）
  */
 import { useState, useEffect, useCallback } from 'react'
 import type { Material } from '../types'
@@ -9,6 +9,28 @@ import {
   addUrlMaterial,
   deleteMaterial,
 } from '../api/client'
+
+/** 更新素材 API */
+async function updateMaterialApi(id: number, data: { title?: string; url?: string }): Promise<void> {
+  const formData = new FormData()
+  if (data.title) formData.append('title', data.title)
+  if (data.url) formData.append('url', data.url)
+
+  const token = localStorage.getItem('token')
+  const headers: Record<string, string> = {}
+  if (token) headers['Authorization'] = `Bearer ${token}`
+
+  const response = await fetch(`/api/materials/${id}`, {
+    method: 'PUT',
+    headers,
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({ message: response.statusText }))
+    throw new Error(errorData.detail || '更新失败')
+  }
+}
 
 export function useMaterials() {
   const [materials, setMaterials] = useState<Material[]>([])
@@ -68,6 +90,19 @@ export function useMaterials() {
     }
   }, [loadMaterials])
 
+  /** 更新素材 */
+  const handleUpdate = useCallback(async (id: number, data: { title?: string; url?: string }) => {
+    try {
+      setError(null)
+      await updateMaterialApi(id, data)
+      await loadMaterials()
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '更新失败'
+      setError(msg)
+      throw err
+    }
+  }, [loadMaterials])
+
   useEffect(() => {
     loadMaterials()
   }, [loadMaterials])
@@ -80,5 +115,6 @@ export function useMaterials() {
     upload: handleUpload,
     addUrl: handleAddUrl,
     delete: handleDelete,
+    update: handleUpdate,
   }
 }

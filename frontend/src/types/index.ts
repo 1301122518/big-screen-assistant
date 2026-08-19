@@ -1,12 +1,23 @@
 /**
- * 全局类型定义
+ * 全局类型定义（v3.0 增强版）
  */
 
 /** 素材类型枚举 */
-export type MaterialType = 'image' | 'video' | 'webpage'
+export type MaterialType = 'image' | 'video' | 'html' | 'webpage'
 
 /** 播放状态枚举 */
 export type PlayerStatus = 'idle' | 'playing' | 'stopped'
+
+/** 播放模式 */
+export type PlayMode = 'sequential' | 'loop' | 'shuffle'
+
+/** 标签 */
+export interface Tag {
+  id: number
+  name: string
+  color: string
+  created_at?: string
+}
 
 /** 素材数据模型 */
 export interface Material {
@@ -17,6 +28,8 @@ export interface Material {
   url: string | null
   mime_type: string | null
   size: number | null
+  hls_path: string | null
+  tags: Tag[]
   created_at: string
   updated_at: string
 }
@@ -28,6 +41,25 @@ export interface PlayerState {
   status: PlayerStatus
   updated_at: string
   current_material: Material | null
+}
+
+/** 播放列表条目 */
+export interface PlaylistItem {
+  id: number
+  material_id: number
+  sort_order: number
+  material: Material | null
+}
+
+/** 播放列表 */
+export interface Playlist {
+  id: number
+  name: string
+  play_mode: PlayMode
+  scheduled_at: string | null
+  items: PlaylistItem[]
+  created_at: string
+  updated_at: string
 }
 
 /** 统一 API 响应格式 */
@@ -47,6 +79,37 @@ export interface SystemInfo {
   connected_players: number
 }
 
+/** Dashboard 统计数据 */
+export interface DashboardStats {
+  materials: { total: number; today_uploads: number }
+  devices: { total: number; approved: number; online: number }
+  playlists: { total: number }
+  storage: { total: number; used: number; free: number }
+  today_plays: number
+}
+
+/** 审计日志 */
+export interface AuditLog {
+  id: number
+  user: string
+  action: string
+  target_type: string | null
+  target_id: number | null
+  detail: string | null
+  ip_address: string | null
+  created_at: string
+}
+
+/** 上传进度 */
+export interface UploadProgress {
+  name: string
+  size: number
+  status: 'uploading' | 'completed' | 'error'
+  progress: number
+  error?: string
+  material_id?: number
+}
+
 /** WebSocket 播放指令 */
 export interface WsPlayMessage {
   type: 'play'
@@ -56,6 +119,14 @@ export interface WsPlayMessage {
     title: string
     url: string
     mime_type: string | null
+    hls_path: string | null
+  }
+  playlist?: {
+    id: number
+    name: string
+    play_mode: PlayMode
+    items: { id: number; material_id: number; sort_order: number }[]
+    current_index: number
   }
 }
 
@@ -71,3 +142,21 @@ export interface WsRefreshMessage {
 
 /** WebSocket 消息联合类型 */
 export type WsMessage = WsPlayMessage | WsStopMessage | WsRefreshMessage
+
+/** 设备状态 */
+export type DeviceStatus = 'pending' | 'approved' | 'rejected'
+
+/** 设备数据模型 */
+export interface Device {
+  id: number
+  device_id: string
+  device_name: string
+  device_type: string
+  status: DeviceStatus
+  ip_address: string | null
+  last_seen: string | null
+  playing_material_id: number | null
+  created_at: string | null
+  updated_at: string | null
+  is_online?: boolean
+}

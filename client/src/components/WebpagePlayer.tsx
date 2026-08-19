@@ -1,6 +1,6 @@
 /**
  * WebpagePlayer - 网页播放组件
- * 使用 iframe 全屏展示网页
+ * 使用 iframe 全屏展示网页，带沙箱安全隔离
  */
 import React, { useState } from 'react'
 
@@ -31,7 +31,7 @@ const WebpagePlayer: React.FC<WebpagePlayerProps> = ({ url, title }) => {
         </div>
       )}
 
-      {/* iframe */}
+      {/* iframe - 带沙箱安全隔离 */}
       <iframe
         src={url}
         title={title}
@@ -40,6 +40,7 @@ const WebpagePlayer: React.FC<WebpagePlayerProps> = ({ url, title }) => {
         className={`w-full h-full border-0 transition-opacity duration-500 ${loaded ? 'opacity-100' : 'opacity-0'}`}
         sandbox="allow-scripts allow-same-origin allow-popups allow-forms"
         allow="autoplay; fullscreen"
+        referrerPolicy="no-referrer"
       />
     </div>
   )

@@ -5,7 +5,7 @@
 set -e
 
 APP_NAME="big-screen-assistant"
-APP_DIR="/home/<YOUR_USERNAME>/big-screen-assistant"
+APP_DIR="/home/<YOUR_USER>/big-screen-assistant"
 PORT=8787
 
 echo "=========================================="

@@ -34,4 +34,22 @@ uploads/*
 !uploads/.gitkeep
 *.db
 *.sqlite3
+*.sqlite
 .env
+
+# Data & state
+data/
+state/
+memory/
+
+# Electron client
+client/dist-electron/
+client/release/
+client/node_modules/
+client/dist/
+
+# HLS output
+backend/hls_output/
+
+# Scripts build output
+scripts/dist/

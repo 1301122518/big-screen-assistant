@@ -1,127 +1,179 @@
 /**
- * useWebSocket Hook - WebSocket 连接管理
- * 支持断线自动重连（指数退避）
+ * useWebSocket Hook - WebSocket 连接管理（v3.0 增强版）
+ * 支持断线自动重连（指数退避）和设备准入控制
+ * 新增：远程指令处理、播放进度上报
  */
 import { useState, useEffect, useRef, useCallback } from 'react'
 import type { WsMessage } from '../types'
+import Logger from '../utils/logger'
+
+const log = Logger.create('WebSocket')
+
+interface UseWebSocketOptions {
+  serverUrl: string
+  deviceId: string
+  onMessage: (msg: WsMessage) => void
+  /** 播放进度回调，返回 { currentTime, duration, materialId, status } */
+  getProgress?: () => { currentTime: number; duration: number; materialId: number | null; status: string }
+  onAuthError?: (error: { type: string; message: string }) => void
+}
 
 interface UseWebSocketReturn {
   connected: boolean
-  lastMessage: WsMessage | null
-  sendMessage: (msg: unknown) => void
+  sendMessage: (msg: object) => void
   reconnect: () => void
 }
 
-export function useWebSocket(serverUrl: string): UseWebSocketReturn {
+export function useWebSocket(options: UseWebSocketOptions): UseWebSocketReturn {
+  const { serverUrl, deviceId, onMessage, getProgress, onAuthError } = options
   const [connected, setConnected] = useState(false)
-  const [lastMessage, setLastMessage] = useState<WsMessage | null>(null)
   const wsRef = useRef<WebSocket | null>(null)
   const reconnectTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const retryCountRef = useRef(0)
-  const mountedRef = useRef(true)
+  const maxRetries = 50
+  const progressTimerRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const manualDisconnect = useRef(false)
 
-  const MAX_RETRY_DELAY = 30000 // 最大重连间隔 30 秒
-
-  /** 计算重连延迟（指数退避） */
-  const getRetryDelay = useCallback(() => {
-    const delay = Math.min(1000 * Math.pow(2, retryCountRef.current), MAX_RETRY_DELAY)
-    retryCountRef.current++
-    return delay
-  }, [])
-
-  /** 建立 WebSocket 连接 */
   const connect = useCallback(() => {
-    if (!mountedRef.current || !serverUrl) return
-
-    // 清理之前的连接
-    if (wsRef.current) {
-      wsRef.current.close()
-      wsRef.current = null
+    // 前置条件：serverUrl 和 deviceId 必须有效
+    if (!serverUrl || !deviceId) {
+      log.debug('跳过连接：缺少 serverUrl 或 deviceId')
+      return
     }
 
     // 构建 WebSocket URL
-    let wsUrl = serverUrl.replace(/\/$/, '')
-    if (wsUrl.startsWith('http://')) {
-      wsUrl = 'ws://' + wsUrl.slice(7)
-    } else if (wsUrl.startsWith('https://')) {
-      wsUrl = 'wss://' + wsUrl.slice(8)
-    }
-    wsUrl += '/api/player/ws/player'
+    const baseUrl = serverUrl.replace(/^http/, 'ws')
+    const wsUrl = `${baseUrl}/api/player/ws/player?device_id=${deviceId}`
 
     try {
+      manualDisconnect.current = false
       const ws = new WebSocket(wsUrl)
       wsRef.current = ws
 
       ws.onopen = () => {
-        if (!mountedRef.current) return
+        log.info('WebSocket 已连接')
         setConnected(true)
-        retryCountRef.current = 0 // 重置重试计数
-        if (reconnectTimerRef.current) {
-          clearTimeout(reconnectTimerRef.current)
-          reconnectTimerRef.current = null
-        }
+        retryCountRef.current = 0
       }
 
-      ws.onmessage = (event: MessageEvent) => {
-        if (!mountedRef.current) return
+      ws.onmessage = (event) => {
         try {
-          const data = JSON.parse(event.data as string) as WsMessage
-          setLastMessage(data)
-        } catch {
-          // 忽略非 JSON 消息
+          const msg: WsMessage = JSON.parse(event.data)
+
+          // 处理认证错误
+          if (msg.type === 'auth_error' || msg.type === 'auth_pending' || msg.type === 'auth_rejected') {
+            log.warn(`认证错误: ${msg.type}`)
+            onAuthError?.({ type: msg.type, message: (msg as any).message || '' })
+            return
+          }
+
+          if (msg.type === 'ping') {
+            return
+          }
+
+          onMessage(msg)
+        } catch (err) {
+          log.error('消息解析失败', err)
         }
       }
 
       ws.onclose = () => {
-        if (!mountedRef.current) return
         setConnected(false)
-        wsRef.current = null
-        // 自动重连
-        const delay = getRetryDelay()
-        reconnectTimerRef.current = setTimeout(() => {
-          connect()
-        }, delay)
+        if (!manualDisconnect.current) {
+          scheduleReconnect()
+        }
       }
 
       ws.onerror = () => {
-        ws.close()
+        // onclose 会紧接着触发
       }
-    } catch {
-      const delay = getRetryDelay()
-      reconnectTimerRef.current = setTimeout(() => {
-        connect()
-      }, delay)
+    } catch (err) {
+      log.error('WebSocket 创建失败', err)
+      scheduleReconnect()
     }
-  }, [serverUrl, getRetryDelay])
+  }, [serverUrl, deviceId, onMessage, onAuthError])
 
-  /** 手动重连 */
-  const reconnect = useCallback(() => {
-    retryCountRef.current = 0
-    connect()
+  const scheduleReconnect = useCallback(() => {
+    if (retryCountRef.current >= maxRetries) {
+      log.error('已达到最大重试次数')
+      return
+    }
+
+    // 指数退避：2s, 4s, 8s, 16s, 最大 60s
+    const delay = Math.min(2000 * Math.pow(1.5, retryCountRef.current), 60000)
+    retryCountRef.current++
+
+    log.info(`${delay / 1000}s 后重连 (第 ${retryCountRef.current} 次)`)
+    reconnectTimerRef.current = setTimeout(() => {
+      if (!manualDisconnect.current) {
+        connect()
+      }
+    }, delay)
   }, [connect])
 
-  /** 发送消息 */
-  const sendMessage = useCallback((msg: unknown) => {
-    if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+  const sendMessage = useCallback((msg: object) => {
+    if (wsRef.current?.readyState === WebSocket.OPEN) {
       wsRef.current.send(JSON.stringify(msg))
     }
   }, [])
 
+  const reconnect = useCallback(() => {
+    if (reconnectTimerRef.current) {
+      clearTimeout(reconnectTimerRef.current)
+    }
+    if (wsRef.current) {
+      manualDisconnect.current = true
+      wsRef.current.close()
+    }
+    retryCountRef.current = 0
+    connect()
+  }, [connect])
+
+  // 连接生命周期
   useEffect(() => {
-    mountedRef.current = true
     connect()
 
     return () => {
-      mountedRef.current = false
+      manualDisconnect.current = true
       if (reconnectTimerRef.current) {
         clearTimeout(reconnectTimerRef.current)
       }
       if (wsRef.current) {
         wsRef.current.close()
-        wsRef.current = null
       }
     }
   }, [connect])
 
-  return { connected, lastMessage, sendMessage, reconnect }
+  // 进度上报（每 5 秒）
+  useEffect(() => {
+    if (!getProgress || !connected) {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current)
+        progressTimerRef.current = null
+      }
+      return
+    }
+
+    progressTimerRef.current = setInterval(() => {
+      const progress = getProgress()
+      if (progress && wsRef.current?.readyState === WebSocket.OPEN) {
+        wsRef.current.send(JSON.stringify({
+          type: 'progress',
+          material_id: progress.materialId,
+          current_time: Math.round(progress.currentTime),
+          duration: Math.round(progress.duration),
+          status: progress.status,
+        }))
+      }
+    }, 5000)
+
+    return () => {
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current)
+        progressTimerRef.current = null
+      }
+    }
+  }, [connected, getProgress])
+
+  return { connected, sendMessage, reconnect }
 }

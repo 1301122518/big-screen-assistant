@@ -7,9 +7,10 @@ import React, { useState, useEffect } from 'react'
 interface StandbyScreenProps {
   connected: boolean
   serverUrl: string
+  deviceName?: string
 }
 
-const StandbyScreen: React.FC<StandbyScreenProps> = ({ connected, serverUrl }) => {
+const StandbyScreen: React.FC<StandbyScreenProps> = ({ connected, serverUrl, deviceName }) => {
   const [time, setTime] = useState(new Date())
 
   useEffect(() => {
@@ -31,7 +32,7 @@ const StandbyScreen: React.FC<StandbyScreenProps> = ({ connected, serverUrl }) =
   }
 
   return (
-    <div className="flex flex-col items-center justify-center w-full h-full bg-black">
+    <div className="flex flex-col items-center justify-center w-full h-full bg-black relative">
       {/* 时间 */}
       <div className="text-8xl font-light text-white mb-4 tracking-wider">
         {formatTime(time)}
@@ -50,6 +51,13 @@ const StandbyScreen: React.FC<StandbyScreenProps> = ({ connected, serverUrl }) =
           {serverUrl && connected && ` · ${serverUrl}`}
         </span>
       </div>
+
+      {/* 设备名称 */}
+      {deviceName && (
+        <p className="text-gray-600 text-xs mt-2">
+          设备：{deviceName}
+        </p>
+      )}
 
       {/* 提示 */}
       {!connected && (

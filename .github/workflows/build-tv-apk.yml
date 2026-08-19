@@ -38,32 +38,20 @@ jobs:
       run: chmod +x gradlew
       working-directory: tv-client
 
-    - name: Generate CI signing keystore
-      run: |
-        keytool -genkeypair -v -keystore tv-client/app/ci-release.keystore \
-          -alias ci-release -keyalg RSA -keysize 2048 -validity 10000 \
-          -storepass ci123456 -keypass ci123456 \
-          -dname "CN=BigScreenTV CI, OU=Dev, O=BigScreenTV, L=Beijing, ST=Beijing, C=CN"
-
     - name: Build Debug APK
       run: ./gradlew assembleDebug --no-daemon
       working-directory: tv-client
 
-    - name: Upload Debug APK artifact
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
         name: big-screen-tv-debug
         path: tv-client/app/build/outputs/apk/debug/app-debug.apk
         retention-days: 30
 
-    - name: Build Release APK (signed)
+    - name: Build Release APK
       if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-      run: |
-        ./gradlew assembleRelease --no-daemon \
-          -PKEYSTORE_FILE=ci-release.keystore \
-          -PKEYSTORE_PASSWORD=ci123456 \
-          -PKEY_ALIAS=ci-release \
-          -PKEY_PASSWORD=ci123456
+      run: ./gradlew assembleRelease --no-daemon
       working-directory: tv-client
 
     - name: Upload Release APK
@@ -71,5 +59,5 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: big-screen-tv-release
-        path: tv-client/app/build/outputs/apk/release/app-release.apk
+        path: tv-client/app/build/outputs/apk/release/app-release-unsigned.apk
         retention-days: 30

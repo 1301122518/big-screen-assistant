@@ -189,8 +189,13 @@ class WebViewActivity : AppCompatActivity() {
         progressBar.visibility = View.VISIBLE
         tvStatus.visibility = View.VISIBLE
         
-        // 加载播放器页面
-        val playerUrl = "$serverUrl/player"
+        // 加载播放器页面，附带设备信息（用于设备准入控制）
+        val assetConfig = app.loadAssetConfig()
+        val deviceId = app.getOrCreateDeviceId()
+        val playerUrl = "$serverUrl/player" +
+            "?device_id=${java.net.URLEncoder.encode(deviceId, "UTF-8")}" +
+            "&device_name=${java.net.URLEncoder.encode(assetConfig.deviceName, "UTF-8")}" +
+            "&device_type=tv"
         webView.loadUrl(playerUrl)
     }
 
@@ -248,7 +253,17 @@ class WebViewActivity : AppCompatActivity() {
         
         @JavascriptInterface
         fun getDeviceId(): String {
-            return android.os.Build.MODEL + "_" + android.os.Build.SERIAL
+            return app.getOrCreateDeviceId()
+        }
+        
+        @JavascriptInterface
+        fun getDeviceName(): String {
+            return app.loadAssetConfig().deviceName
+        }
+        
+        @JavascriptInterface
+        fun getDeviceType(): String {
+            return "tv"
         }
         
         @JavascriptInterface
