@@ -15,7 +15,7 @@ interface AppConfig {
 }
 
 const DEFAULT_CONFIG: AppConfig = {
-  serverUrl: 'http://<YOUR_SERVER_IP>:8787',
+  serverUrl: 'http://172.16.156.50:8787',
   deviceName: os.hostname() || '大屏客户端',
 }
 

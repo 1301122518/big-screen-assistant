@@ -14,8 +14,8 @@
 ```bash
 # 打包后上传
 tar -czf big-screen-assistant.tar.gz big-screen-assistant/
-scp big-screen-assistant.tar.gz <YOUR_USER>@<YOUR_SERVER_IP>:~/
-ssh <YOUR_USER>@<YOUR_SERVER_IP> "tar -xzf big-screen-assistant.tar.gz && rm big-screen-assistant.tar.gz"
+scp big-screen-assistant.tar.gz awx@123.57.232.163:~/
+ssh awx@123.57.232.163 "tar -xzf big-screen-assistant.tar.gz && rm big-screen-assistant.tar.gz"
 ```
 
 ### 2. 启动服务
@@ -47,7 +47,7 @@ curl http://localhost:8080/docs
 ### 4. 访问
 
 ```
-http://<YOUR_SERVER_IP>:8080/admin
+http://123.57.232.163:8080/admin
 ```
 
 ## 方式二：手动部署
@@ -90,7 +90,7 @@ After=network.target
 
 [Service]
 Type=simple
-User=<YOUR_USER>
+User=awx
 WorkingDirectory=/opt/big-screen-assistant
 Environment="JWT_SECRET=your-random-secret-key"
 Environment="ADMIN_PASSWORD=your-strong-password"
@@ -138,7 +138,7 @@ tar -czf uploads-backup.tar.gz uploads/
 
 ```bash
 # 1. 上传新版本文件
-scp -r big-screen-assistant/* <YOUR_USER>@<YOUR_SERVER_IP>:~/big-screen-assistant/
+scp -r big-screen-assistant/* awx@123.57.232.163:~/big-screen-assistant/
 
 # 2. 重启服务
 docker restart big-screen-assistant

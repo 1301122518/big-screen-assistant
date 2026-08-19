@@ -32,8 +32,8 @@ MAX_UPLOAD_SIZE = 2 * 1024 * 1024 * 1024
 HLS_TIMEOUT = int(os.getenv("HLS_TIMEOUT", "1800"))
 
 # JWT 认证配置
-JWT_SECRET = os.getenv("JWT_SECRET", "<GENERATE_A_RANDOM_SECRET>")
+JWT_SECRET = os.getenv("JWT_SECRET", "big-screen-assistant-secret-key-2026")
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_HOURS = 24
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "<CHANGE_ME>")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
