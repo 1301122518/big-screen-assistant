@@ -10,14 +10,17 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # 服务端口，可通过环境变量 PORT 修改
 PORT = int(os.getenv("PORT", "8080"))
 
-# 数据库路径
-DATABASE_URL = f"sqlite+aiosqlite:///{BASE_DIR / 'data' / 'app.db'}"
+# 数据库路径（支持通过环境变量覆盖，Docker 部署时使用挂载卷路径）
+DATABASE_URL = os.getenv(
+    "DATABASE_URL",
+    f"sqlite+aiosqlite:///{BASE_DIR / 'data' / 'app.db'}"
+)
 
-# 上传文件存储目录
-UPLOAD_DIR = BASE_DIR / "uploads"
+# 上传文件存储目录（支持通过环境变量覆盖）
+UPLOAD_DIR = Path(os.getenv("UPLOAD_DIR", str(BASE_DIR / "uploads")))
 
-# HLS 转码输出目录
-HLS_DIR = UPLOAD_DIR / "hls"
+# HLS 转码输出目录（支持通过环境变量覆盖）
+HLS_DIR = Path(os.getenv("HLS_DIR", str(UPLOAD_DIR / "hls")))
 
 # 允许上传的文件类型及对应 MIME
 ALLOWED_IMAGE_EXTS = {".jpg", ".jpeg", ".png", ".gif", ".bmp", ".webp"}

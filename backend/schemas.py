@@ -2,7 +2,7 @@
 大屏操作助手 - Pydantic 数据模式定义
 """
 from datetime import datetime
-from typing import Optional, Any, Generic, TypeVar, Dict
+from typing import Optional, Any, Generic, TypeVar, Dict, List
 from pydantic import BaseModel, Field
 
 T = TypeVar("T")
